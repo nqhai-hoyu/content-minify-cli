@@ -4,12 +4,56 @@ import { randomUUID } from "node:crypto";
 import { cp, mkdir, mkdtemp, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { protectContent } from "../lib/protect-content.js";
+import { inspectContent, protectContent } from "../lib/protect-content.js";
 import { verifyContent } from "../lib/verify-content.js";
 
 function fail(message) {
   process.stderr.write(`minify: ${message}\n`);
   process.exitCode = 1;
+}
+
+function parseArguments(args) {
+  let contentName;
+  let outputPath;
+  let dryRun = false;
+  let help = false;
+  let version = false;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument === "--out") {
+      outputPath = args[index + 1];
+      if (!outputPath || outputPath.startsWith("-")) {
+        throw new Error("--out requires a directory path");
+      }
+      index += 1;
+    } else if (argument === "--dry-run") {
+      dryRun = true;
+    } else if (argument === "--help" || argument === "-h") {
+      help = true;
+    } else if (argument === "--version" || argument === "-v") {
+      version = true;
+    } else if (argument.startsWith("-")) {
+      throw new Error(`unknown option: ${argument}`);
+    } else if (!contentName) {
+      contentName = argument;
+    } else {
+      throw new Error(`unexpected argument: ${argument}`);
+    }
+  }
+
+  return { contentName, dryRun, help, outputPath, version };
+}
+
+function printHelp() {
+  process.stdout.write(`Usage: minify <content-name> [options]
+
+Options:
+  --out <directory>  Choose the protected output directory
+  --dry-run          Show the protection plan without creating output
+  --help, -h         Show this help
+  --version, -v      Show the installed version
+`);
 }
 
 async function loadVerificationChecks(cwd, contentName) {
@@ -105,15 +149,35 @@ async function publish(staging, output) {
 }
 
 async function main() {
-  const contentName = process.argv[2];
-  if (!contentName || contentName.startsWith("-")) {
-    fail("usage: minify <content-name>");
+  let options;
+  try {
+    options = parseArguments(process.argv.slice(2));
+  } catch (error) {
+    fail(error.message);
+    return;
+  }
+  const { contentName, dryRun, help, outputPath, version } = options;
+  if (help) {
+    printHelp();
+    return;
+  }
+  if (version) {
+    const packageJson = JSON.parse(
+      await readFile(new URL("../package.json", import.meta.url), "utf8"),
+    );
+    process.stdout.write(`${packageJson.version}\n`);
+    return;
+  }
+  if (!contentName) {
+    fail("usage: minify <content-name> [--out <directory>]");
     return;
   }
 
   const cwd = process.cwd();
   const source = path.resolve(cwd, contentName);
-  const output = path.resolve(cwd, "dist", path.basename(source));
+  const output = outputPath
+    ? path.resolve(cwd, outputPath)
+    : path.resolve(cwd, "dist", path.basename(source));
   const checks = await loadVerificationChecks(cwd, path.basename(source));
 
   let sourceStat;
@@ -129,8 +193,25 @@ async function main() {
     return;
   }
 
-  if (source === output || output.startsWith(`${source}${path.sep}`)) {
-    fail("output directory must be outside the source content");
+  if (
+    source === output ||
+    output.startsWith(`${source}${path.sep}`) ||
+    source.startsWith(`${output}${path.sep}`)
+  ) {
+    fail("output directory must be separate from and must not contain the source content");
+    return;
+  }
+
+  if (dryRun) {
+    const summary = await inspectContent(source);
+    process.stdout.write(
+      `Dry run for ${contentName}\n` +
+        `HTML: ${summary.htmlFiles}\n` +
+        `CSS: ${summary.cssFiles}\n` +
+        `JavaScript: ${summary.javascriptFiles}\n` +
+        `Total files copied: ${summary.totalFiles}\n` +
+        `Output: ${path.relative(cwd, output)}\n`,
+    );
     return;
   }
 
