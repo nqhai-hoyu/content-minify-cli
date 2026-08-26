@@ -12,13 +12,13 @@ kiểm tra Chrome/Edge.
 ## Cài trực tiếp từ GitHub
 
 ```powershell
-npm.cmd install -g https://github.com/USERNAME/content-minify-cli.git
+npm.cmd install -g https://github.com/nqhai-hoyu/content-minify-cli.git
 ```
 
 Hoặc clone để phát triển:
 
 ```powershell
-git clone https://github.com/USERNAME/content-minify-cli.git
+git clone https://github.com/nqhai-hoyu/content-minify-cli.git
 cd content-minify-cli
 npm.cmd ci
 npm.cmd link
