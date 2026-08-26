@@ -1,0 +1,34 @@
+{
+  "name": "content-minify-cli",
+  "version": "0.1.0",
+  "description": "Minify and obfuscate static web content while preserving file names and verified behavior.",
+  "type": "module",
+  "bin": {
+    "minify": "./bin/minify.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "minify": "node ./bin/minify.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "cli",
+    "minify",
+    "obfuscate",
+    "static-web"
+  ],
+  "dependencies": {
+    "clean-css": "5.3.3",
+    "html-minifier-terser": "7.2.0",
+    "javascript-obfuscator": "5.6.0",
+    "playwright-core": "1.62.1",
+    "terser": "5.50.0"
+  }
+}
