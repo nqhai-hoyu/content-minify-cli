@@ -10,7 +10,8 @@
     "bin",
     "lib",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "HUONG-DAN-SU-DUNG.md"
   ],
   "scripts": {
     "test": "node --test",

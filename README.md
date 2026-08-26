@@ -4,6 +4,8 @@ CLI minify HTML/CSS và obfuscate JavaScript của static web content. Tool gi�
 nguyên toàn bộ tên file, cấu trúc thư mục và chỉ publish khi bản đầu ra vượt qua
 kiểm tra Chrome/Edge.
 
+Hướng dẫn ngắn cho người dùng nội bộ: [HUONG-DAN-SU-DUNG.md](HUONG-DAN-SU-DUNG.md)
+
 ## Yêu cầu
 
 - Node.js 20 trở lên
