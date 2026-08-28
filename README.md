@@ -46,6 +46,18 @@ minify CONTENT_01
 minify CONTENT_01 --obfuscate
 ```
 
+Có thể xử lý nhiều content trong cùng một lệnh:
+
+```powershell
+minify CONTENT_01 C02 CONTENT_07_QH
+minify CONTENT_01 C02 CONTENT_07_QH --obfuscate
+```
+
+Các content được xử lý tuần tự để tránh mở quá nhiều browser cùng lúc. Mỗi
+content có staging, browser verification và output riêng trong `dist`. Nếu một
+content lỗi, lệnh dừng; những content đã publish thành công trước đó vẫn được
+giữ nguyên.
+
 Tool giữ nguyên thư mục nguồn và tạo kết quả tại:
 
 ```text
@@ -63,7 +75,7 @@ root-relative. File `*.min.js` và `*.min.css` được giữ nguyên.
 # Minify rồi làm rối JavaScript
 minify CONTENT_01 --obfuscate
 
-# Chọn thư mục đầu ra
+# Chọn thư mục đầu ra; chỉ dùng khi lệnh có một content
 minify CONTENT_01 --out release\CONTENT_01
 
 # Xem trước phạm vi xử lý, không tạo output

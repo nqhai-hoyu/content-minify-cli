@@ -17,7 +17,7 @@ Máy cần có:
 Mở PowerShell và chạy:
 
 ```powershell
-npm.cmd install -g https://github.com/nqhai-hoyu/content-minify-cli.git#v0.3.0
+npm.cmd install -g https://github.com/nqhai-hoyu/content-minify-cli.git#v0.4.0
 ```
 
 Nếu GitHub yêu cầu đăng nhập, hãy đăng nhập bằng tài khoản đã được cấp quyền.
@@ -31,7 +31,7 @@ minify.cmd --version
 Kết quả:
 
 ```text
-0.3.0
+0.4.0
 ```
 
 ## 3. Sử dụng
@@ -76,6 +76,27 @@ Thư mục `CONTENT_01` gốc không bị thay đổi.
 Cả hai mức đều giữ nguyên tên file, cấu trúc thư mục và kiểm tra các trang bằng
 Chrome/Edge trước khi xuất kết quả.
 
+### Xử lý nhiều content trong một lệnh
+
+```powershell
+# Minification
+minify.cmd CONTENT_01 C02
+
+# Minification rồi obfuscation
+minify.cmd CONTENT_01 C02 --obfuscate
+```
+
+Các content được xử lý tuần tự và tạo kết quả riêng:
+
+```text
+D:\projects\dist\
+├─ CONTENT_01\
+└─ C02\
+```
+
+Nếu một content lỗi, tool dừng tại content đó. Những content đã hoàn thành trước
+đó không bị xóa hoặc rollback. Không dùng `--out` khi truyền nhiều content.
+
 ## 4. Một số tùy chọn
 
 ```powershell
@@ -85,7 +106,7 @@ minify.cmd CONTENT_01 --obfuscate
 # Xem trước, không tạo output
 minify.cmd CONTENT_01 --dry-run
 
-# Chọn thư mục output
+# Chọn thư mục output; chỉ dùng cho một content
 minify.cmd CONTENT_01 --out release\CONTENT_01
 
 # Xem trợ giúp

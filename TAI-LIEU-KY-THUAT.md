@@ -1,7 +1,7 @@
 # Tài liệu kỹ thuật Content Minify CLI
 
 Tài liệu này giải thích công nghệ, cấu trúc code và luồng hoạt động của
-`content-minify-cli` phiên bản 0.3.0. Mục tiêu là giúp người đọc có thể tự xem,
+`content-minify-cli` phiên bản 0.4.0. Mục tiêu là giúp người đọc có thể tự xem,
 debug, bảo trì và mở rộng tool.
 
 ## 1. Tool giải quyết việc gì?
@@ -117,9 +117,9 @@ Dòng này cho hệ điều hành/npm biết file cần được chạy bằng N
 
 Hàm đọc các tham số terminal:
 
-- Tên content, ví dụ `CONTENT_01`.
+- Một hoặc nhiều tên content, ví dụ `CONTENT_01 C02`.
 - `--obfuscate` để bật mức làm rối JavaScript.
-- `--out <directory>` để chọn output.
+- `--out <directory>` để chọn output khi chỉ xử lý một content.
 - `--dry-run` để chỉ xem kế hoạch.
 - `--help` và `--version`.
 
@@ -141,6 +141,8 @@ CLI từ chối chạy nếu:
 - Output trùng source.
 - Output nằm trong source.
 - Source nằm trong output.
+- Nhiều source có cùng basename và cùng trỏ tới một output trong `dist`.
+- Dùng `--out` cùng lúc với nhiều content.
 
 Các kiểm tra này bảo vệ thư mục gốc và tránh vòng lặp sao chép.
 
@@ -160,6 +162,8 @@ Sau đó tool:
 4. Chỉ khi thành công mới publish staging thành output thật.
 
 Nếu bất kỳ bước nào lỗi, staging bị xóa và output tốt trước đó vẫn được giữ.
+Khi nhận nhiều content, CLI lặp pipeline này theo thứ tự. Tính atomic áp dụng cho
+từng content; content đã publish trước một content lỗi sẽ không bị rollback.
 
 ### 6.4. `publish(staging, output)`
 
@@ -374,6 +378,8 @@ Bộ test kiểm tra các hành vi chính:
 
 - Minification mặc định không bật obfuscation.
 - `--obfuscate` thực sự làm rối JavaScript.
+- Một lệnh có thể xử lý nhiều content và tạo đúng các output riêng.
+- Batch có output trùng nhau hoặc dùng `--out` mơ hồ bị từ chối.
 - Giữ nguyên mọi tên file và đường dẫn.
 - Không sửa thư mục nguồn.
 - JavaScript inline và ES modules vẫn chạy.
@@ -397,6 +403,7 @@ npm.cmd test
 ```powershell
 node .\bin\minify.js CONTENT_01
 node .\bin\minify.js CONTENT_01 --obfuscate
+node .\bin\minify.js CONTENT_01 C02 --obfuscate
 ```
 
 Lưu ý: terminal phải đứng ở thư mục cha của `CONTENT_01`. Nếu đang đứng trong
@@ -490,6 +497,8 @@ Sau khi cập nhật một thư viện:
   dùng template syntax hoặc HTML không chuẩn nên có test thực tế riêng.
 - Browser verification phát hiện lỗi load/runtime và các smoke check đã cấu
   hình, nhưng không thể tự biết toàn bộ nghiệp vụ nếu không có check mô tả.
+- Batch được xử lý tuần tự và atomic theo từng content, không atomic cho toàn bộ
+  danh sách.
 
 ## 15. Tóm tắt trách nhiệm từng lớp
 

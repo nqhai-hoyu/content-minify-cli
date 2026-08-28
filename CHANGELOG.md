@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- Cho phép minify hoặc obfuscate nhiều content trong một lệnh.
+- Xử lý tuần tự để tránh mở quá nhiều browser cùng lúc.
+- Từ chối batch có nhiều source cùng trỏ tới một output.
+- Giới hạn `--out` cho lệnh chỉ có một content để tránh ghi đè mơ hồ.
+- Bổ sung integration tests và tài liệu cho batch processing.
+
 ## 0.3.0
 
 - Tách rõ hai mức xử lý: minification mặc định và obfuscation tùy chọn.

@@ -1,6 +1,6 @@
 {
   "name": "content-minify-cli",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Minify or obfuscate static web content while preserving file names and verified behavior.",
   "type": "module",
   "bin": {

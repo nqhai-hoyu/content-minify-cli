@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -106,6 +106,76 @@ test("user can request JavaScript obfuscation through the CLI", async () => {
   );
   assert.doesNotMatch(javascript, /meaningfulBusinessRule/);
   assert.match(javascript, /_0x/);
+});
+
+test("user can minify multiple content directories through one CLI invocation", async () => {
+  const { workspace, content } = await createContentFixture();
+  const secondContent = path.join(workspace, "CONTENT_SECOND");
+  await cp(content, secondContent, { recursive: true });
+
+  const result = spawnSync(
+    process.execPath,
+    [cliPath, "CONTENT_TEST", "CONTENT_SECOND"],
+    { cwd: workspace, encoding: "utf8" },
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /dist[\\/]CONTENT_TEST/);
+  assert.match(result.stdout, /dist[\\/]CONTENT_SECOND/);
+  assert.match(
+    await readFile(path.join(workspace, "dist", "CONTENT_TEST", "index.html"), "utf8"),
+    /<button id="run">Run<\/button>/,
+  );
+  assert.match(
+    await readFile(
+      path.join(workspace, "dist", "CONTENT_SECOND", "index.html"),
+      "utf8",
+    ),
+    /<button id="run">Run<\/button>/,
+  );
+});
+
+test("multiple contents that resolve to the same output are rejected", async () => {
+  const { workspace, content } = await createContentFixture();
+  const first = path.join(workspace, "GROUP_A", "CONTENT_DUPLICATE");
+  const second = path.join(workspace, "GROUP_B", "CONTENT_DUPLICATE");
+  await cp(content, first, { recursive: true });
+  await cp(content, second, { recursive: true });
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      cliPath,
+      "GROUP_A/CONTENT_DUPLICATE",
+      "GROUP_B/CONTENT_DUPLICATE",
+      "--dry-run",
+    ],
+    { cwd: workspace, encoding: "utf8" },
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /same output directory/i);
+});
+
+test("custom output is rejected when multiple contents are provided", async () => {
+  const { workspace, content } = await createContentFixture();
+  await cp(content, path.join(workspace, "CONTENT_SECOND"), { recursive: true });
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      cliPath,
+      "CONTENT_TEST",
+      "CONTENT_SECOND",
+      "--out",
+      "release/BATCH",
+      "--dry-run",
+    ],
+    { cwd: workspace, encoding: "utf8" },
+  );
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /--out.*one content/i);
 });
 
 test("protected content preserves every original file name and path", async () => {
@@ -377,7 +447,7 @@ test("help describes the public CLI options", () => {
   });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /minify <content-name>/i);
+  assert.match(result.stdout, /minify <content-name\.\.\.>/i);
   assert.match(result.stdout, /--out/);
   assert.match(result.stdout, /--dry-run/);
   assert.match(result.stdout, /--obfuscate/);
@@ -389,7 +459,7 @@ test("version reports the installed package version", () => {
   });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout.trim(), "0.3.0");
+  assert.equal(result.stdout.trim(), "0.4.0");
 });
 
 test("configured checks can wait for asynchronous behavior", async () => {

@@ -13,7 +13,7 @@ function fail(message) {
 }
 
 function parseArguments(args) {
-  let contentName;
+  const contentNames = [];
   let outputPath;
   let dryRun = false;
   let help = false;
@@ -38,22 +38,20 @@ function parseArguments(args) {
       version = true;
     } else if (argument.startsWith("-")) {
       throw new Error(`unknown option: ${argument}`);
-    } else if (!contentName) {
-      contentName = argument;
     } else {
-      throw new Error(`unexpected argument: ${argument}`);
+      contentNames.push(argument);
     }
   }
 
-  return { contentName, dryRun, help, obfuscate, outputPath, version };
+  return { contentNames, dryRun, help, obfuscate, outputPath, version };
 }
 
 function printHelp() {
-  process.stdout.write(`Usage: minify <content-name> [options]
+  process.stdout.write(`Usage: minify <content-name...> [options]
 
 Options:
   --obfuscate        Obfuscate JavaScript after minification
-  --out <directory>  Choose the output directory
+  --out <directory>  Choose output for a single content only
   --dry-run          Show the processing plan without creating output
   --help, -h         Show this help
   --version, -v      Show the installed version
@@ -152,32 +150,7 @@ async function publish(staging, output) {
   if (movedPreviousOutput) await rm(backup, { recursive: true, force: true });
 }
 
-async function main() {
-  let options;
-  try {
-    options = parseArguments(process.argv.slice(2));
-  } catch (error) {
-    fail(error.message);
-    return;
-  }
-  const { contentName, dryRun, help, obfuscate, outputPath, version } = options;
-  if (help) {
-    printHelp();
-    return;
-  }
-  if (version) {
-    const packageJson = JSON.parse(
-      await readFile(new URL("../package.json", import.meta.url), "utf8"),
-    );
-    process.stdout.write(`${packageJson.version}\n`);
-    return;
-  }
-  if (!contentName) {
-    fail("usage: minify <content-name> [--out <directory>]");
-    return;
-  }
-
-  const cwd = process.cwd();
+async function processContent({ contentName, cwd, dryRun, obfuscate, outputPath }) {
   const source = path.resolve(cwd, contentName);
   const output = outputPath
     ? path.resolve(cwd, outputPath)
@@ -188,13 +161,11 @@ async function main() {
   try {
     sourceStat = await stat(source);
   } catch {
-    fail(`content directory not found: ${contentName}`);
-    return;
+    throw new Error(`content directory not found: ${contentName}`);
   }
 
   if (!sourceStat.isDirectory()) {
-    fail(`content path is not a directory: ${contentName}`);
-    return;
+    throw new Error(`content path is not a directory: ${contentName}`);
   }
 
   if (
@@ -202,8 +173,9 @@ async function main() {
     output.startsWith(`${source}${path.sep}`) ||
     source.startsWith(`${output}${path.sep}`)
   ) {
-    fail("output directory must be separate from and must not contain the source content");
-    return;
+    throw new Error(
+      "output directory must be separate from and must not contain the source content",
+    );
   }
 
   if (dryRun) {
@@ -236,6 +208,50 @@ async function main() {
 
   const resultLabel = obfuscate ? "Obfuscated" : "Minified";
   process.stdout.write(`${resultLabel} content created at ${path.relative(cwd, output)}\n`);
+}
+
+async function main() {
+  let options;
+  try {
+    options = parseArguments(process.argv.slice(2));
+  } catch (error) {
+    fail(error.message);
+    return;
+  }
+  const { contentNames, dryRun, help, obfuscate, outputPath, version } = options;
+  if (help) {
+    printHelp();
+    return;
+  }
+  if (version) {
+    const packageJson = JSON.parse(
+      await readFile(new URL("../package.json", import.meta.url), "utf8"),
+    );
+    process.stdout.write(`${packageJson.version}\n`);
+    return;
+  }
+  if (!contentNames.length) {
+    fail("usage: minify <content-name...> [--out <directory>]");
+    return;
+  }
+  if (outputPath && contentNames.length > 1) {
+    fail("--out can only be used with one content directory");
+    return;
+  }
+  const cwd = process.cwd();
+  const outputKeys = contentNames.map((contentName) => {
+    const source = path.resolve(cwd, contentName);
+    const output = path.resolve(cwd, "dist", path.basename(source));
+    return process.platform === "win32" ? output.toLowerCase() : output;
+  });
+  if (new Set(outputKeys).size !== outputKeys.length) {
+    fail("multiple contents resolve to the same output directory");
+    return;
+  }
+
+  for (const contentName of contentNames) {
+    await processContent({ contentName, cwd, dryRun, obfuscate, outputPath });
+  }
 }
 
 main().catch((error) => fail(error instanceof Error ? error.message : String(error)));
