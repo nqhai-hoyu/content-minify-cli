@@ -1,7 +1,7 @@
 {
   "name": "content-minify-cli",
-  "version": "0.2.0",
-  "description": "Minify and obfuscate static web content while preserving file names and verified behavior.",
+  "version": "0.3.0",
+  "description": "Minify or obfuscate static web content while preserving file names and verified behavior.",
   "type": "module",
   "bin": {
     "minify": "./bin/minify.js"
@@ -11,7 +11,8 @@
     "lib",
     "README.md",
     "CHANGELOG.md",
-    "HUONG-DAN-SU-DUNG.md"
+    "HUONG-DAN-SU-DUNG.md",
+    "TAI-LIEU-KY-THUAT.md"
   ],
   "scripts": {
     "test": "node --test",

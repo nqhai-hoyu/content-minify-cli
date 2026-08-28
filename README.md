@@ -1,10 +1,14 @@
 # Content Minify CLI
 
-CLI minify HTML/CSS và obfuscate JavaScript của static web content. Tool giữ
-nguyên toàn bộ tên file, cấu trúc thư mục và chỉ publish khi bản đầu ra vượt qua
-kiểm tra Chrome/Edge.
+CLI có hai chế độ riêng cho static web content: minification để giảm dung lượng,
+và obfuscation để làm JavaScript khó đọc/reverse engineer. Tool giữ nguyên toàn
+bộ tên file, cấu trúc thư mục và chỉ publish khi bản đầu ra vượt qua kiểm tra
+Chrome/Edge.
 
 Hướng dẫn ngắn cho người dùng nội bộ: [HUONG-DAN-SU-DUNG.md](HUONG-DAN-SU-DUNG.md)
+
+Tài liệu giải thích công nghệ và source code:
+[TAI-LIEU-KY-THUAT.md](TAI-LIEU-KY-THUAT.md)
 
 ## Yêu cầu
 
@@ -30,10 +34,16 @@ Nếu PowerShell chặn npm shim `.ps1`, dùng `minify.cmd` thay cho `minify`.
 
 ## Sử dụng
 
-Đứng tại thư mục cha của content:
+Đứng tại thư mục cha của content. Chế độ mặc định chỉ minify:
 
 ```powershell
 minify CONTENT_01
+```
+
+Để minify rồi obfuscate JavaScript:
+
+```powershell
+minify CONTENT_01 --obfuscate
 ```
 
 Tool giữ nguyên thư mục nguồn và tạo kết quả tại:
@@ -42,14 +52,17 @@ Tool giữ nguyên thư mục nguồn và tạo kết quả tại:
 dist\CONTENT_01
 ```
 
-Mỗi file giữ nguyên tên/đường dẫn. Toàn bộ file HTML và CSS được minify; các file
-JavaScript tự viết được minify và obfuscate tại chỗ. Tool hỗ trợ JavaScript
-inline, ES modules và đường dẫn root-relative. File `*.min.js` và `*.min.css`
-được giữ nguyên.
+Mỗi file giữ nguyên tên/đường dẫn. Cả hai chế độ đều minify HTML, CSS và
+JavaScript tự viết. `--obfuscate` chạy thêm `javascript-obfuscator` cho
+JavaScript file và JavaScript inline. Tool hỗ trợ ES modules và đường dẫn
+root-relative. File `*.min.js` và `*.min.css` được giữ nguyên.
 
 ### Tùy chọn CLI
 
 ```powershell
+# Minify rồi làm rối JavaScript
+minify CONTENT_01 --obfuscate
+
 # Chọn thư mục đầu ra
 minify CONTENT_01 --out release\CONTENT_01
 

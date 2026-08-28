@@ -17,6 +17,7 @@ function parseArguments(args) {
   let outputPath;
   let dryRun = false;
   let help = false;
+  let obfuscate = false;
   let version = false;
 
   for (let index = 0; index < args.length; index += 1) {
@@ -29,6 +30,8 @@ function parseArguments(args) {
       index += 1;
     } else if (argument === "--dry-run") {
       dryRun = true;
+    } else if (argument === "--obfuscate") {
+      obfuscate = true;
     } else if (argument === "--help" || argument === "-h") {
       help = true;
     } else if (argument === "--version" || argument === "-v") {
@@ -42,15 +45,16 @@ function parseArguments(args) {
     }
   }
 
-  return { contentName, dryRun, help, outputPath, version };
+  return { contentName, dryRun, help, obfuscate, outputPath, version };
 }
 
 function printHelp() {
   process.stdout.write(`Usage: minify <content-name> [options]
 
 Options:
-  --out <directory>  Choose the protected output directory
-  --dry-run          Show the protection plan without creating output
+  --obfuscate        Obfuscate JavaScript after minification
+  --out <directory>  Choose the output directory
+  --dry-run          Show the processing plan without creating output
   --help, -h         Show this help
   --version, -v      Show the installed version
 `);
@@ -156,7 +160,7 @@ async function main() {
     fail(error.message);
     return;
   }
-  const { contentName, dryRun, help, outputPath, version } = options;
+  const { contentName, dryRun, help, obfuscate, outputPath, version } = options;
   if (help) {
     printHelp();
     return;
@@ -221,7 +225,7 @@ async function main() {
 
   try {
     await cp(source, staging, { recursive: true, force: true });
-    await protectContent(staging);
+    await protectContent(staging, { obfuscate });
     await verifyContent(staging, checks);
 
     await publish(staging, output);
@@ -230,7 +234,8 @@ async function main() {
     throw error;
   }
 
-  process.stdout.write(`Protected content created at ${path.relative(cwd, output)}\n`);
+  const resultLabel = obfuscate ? "Obfuscated" : "Minified";
+  process.stdout.write(`${resultLabel} content created at ${path.relative(cwd, output)}\n`);
 }
 
 main().catch((error) => fail(error instanceof Error ? error.message : String(error)));

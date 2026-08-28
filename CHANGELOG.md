@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Tách rõ hai mức xử lý: minification mặc định và obfuscation tùy chọn.
+- Thêm tùy chọn `--obfuscate` để minify rồi làm rối JavaScript.
+- Dùng Terser, CleanCSS và html-minifier-terser cho chế độ minification.
+- Chỉ gọi javascript-obfuscator khi người dùng chọn obfuscation.
+- Tiếp tục giữ nguyên tên file, cấu trúc thư mục và xác minh bằng browser.
+
 ## 0.2.0
 
 - Bảo vệ toàn bộ file HTML, CSS và JavaScript trong content.

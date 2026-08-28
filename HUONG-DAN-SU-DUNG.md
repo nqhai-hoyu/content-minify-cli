@@ -1,5 +1,8 @@
 # Hướng dẫn cài và sử dụng Content Minify CLI
 
+Muốn tìm hiểu công nghệ và source code của tool, xem
+[TAI-LIEU-KY-THUAT.md](TAI-LIEU-KY-THUAT.md).
+
 ## 1. Yêu cầu
 
 Máy cần có:
@@ -14,7 +17,7 @@ Máy cần có:
 Mở PowerShell và chạy:
 
 ```powershell
-npm.cmd install -g https://github.com/nqhai-hoyu/content-minify-cli.git#v0.2.0
+npm.cmd install -g https://github.com/nqhai-hoyu/content-minify-cli.git#v0.3.0
 ```
 
 Nếu GitHub yêu cầu đăng nhập, hãy đăng nhập bằng tài khoản đã được cấp quyền.
@@ -28,7 +31,7 @@ minify.cmd --version
 Kết quả:
 
 ```text
-0.2.0
+0.3.0
 ```
 
 ## 3. Sử dụng
@@ -41,11 +44,25 @@ D:\projects\
 └─ C02\
 ```
 
-Mở terminal tại thư mục cha rồi chạy:
+Mở terminal tại thư mục cha rồi chọn một trong hai mức xử lý.
+
+### Mức 1: Minification
+
+Thu gọn HTML, CSS và JavaScript để giảm dung lượng. Đây là chế độ mặc định:
 
 ```powershell
 cd D:\projects
 minify.cmd CONTENT_01
+```
+
+### Mức 2: Obfuscation
+
+Minify toàn bộ content, sau đó làm rối JavaScript để khó đọc và khó reverse
+engineer hơn:
+
+```powershell
+cd D:\projects
+minify.cmd CONTENT_01 --obfuscate
 ```
 
 Kết quả được tạo tại:
@@ -56,9 +73,15 @@ D:\projects\dist\CONTENT_01
 
 Thư mục `CONTENT_01` gốc không bị thay đổi.
 
+Cả hai mức đều giữ nguyên tên file, cấu trúc thư mục và kiểm tra các trang bằng
+Chrome/Edge trước khi xuất kết quả.
+
 ## 4. Một số tùy chọn
 
 ```powershell
+# Minify rồi làm rối JavaScript
+minify.cmd CONTENT_01 --obfuscate
+
 # Xem trước, không tạo output
 minify.cmd CONTENT_01 --dry-run
 

@@ -71,6 +71,43 @@ test("user can protect a content directory through the CLI", async () => {
   );
 });
 
+test("default mode minifies JavaScript without obfuscating application strings", async () => {
+  const { workspace } = await createContentFixture();
+
+  const result = spawnSync(process.execPath, [cliPath, "CONTENT_TEST"], {
+    cwd: workspace,
+    encoding: "utf8",
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Minified content/i);
+  const javascript = await readFile(
+    path.join(workspace, "dist", "CONTENT_TEST", "js", "app.js"),
+    "utf8",
+  );
+  assert.doesNotMatch(javascript, /behavior that must remain available/);
+  assert.match(javascript, /meaningfulBusinessRule/);
+});
+
+test("user can request JavaScript obfuscation through the CLI", async () => {
+  const { workspace } = await createContentFixture();
+
+  const result = spawnSync(
+    process.execPath,
+    [cliPath, "CONTENT_TEST", "--obfuscate"],
+    { cwd: workspace, encoding: "utf8" },
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Obfuscated content/i);
+  const javascript = await readFile(
+    path.join(workspace, "dist", "CONTENT_TEST", "js", "app.js"),
+    "utf8",
+  );
+  assert.doesNotMatch(javascript, /meaningfulBusinessRule/);
+  assert.match(javascript, /_0x/);
+});
+
 test("protected content preserves every original file name and path", async () => {
   const { workspace, content } = await createContentFixture();
 
@@ -287,13 +324,14 @@ test("dry run reports the protection plan without creating output", async () => 
   });
 });
 
-test("published content no longer exposes readable application source", async () => {
+test("obfuscated content no longer exposes readable application source", async () => {
   const { workspace } = await createContentFixture();
 
-  const result = spawnSync(process.execPath, [cliPath, "CONTENT_TEST"], {
-    cwd: workspace,
-    encoding: "utf8",
-  });
+  const result = spawnSync(
+    process.execPath,
+    [cliPath, "CONTENT_TEST", "--obfuscate"],
+    { cwd: workspace, encoding: "utf8" },
+  );
 
   assert.equal(result.status, 0, result.stderr);
   const outputRoot = path.join(workspace, "dist", "CONTENT_TEST");
@@ -342,6 +380,7 @@ test("help describes the public CLI options", () => {
   assert.match(result.stdout, /minify <content-name>/i);
   assert.match(result.stdout, /--out/);
   assert.match(result.stdout, /--dry-run/);
+  assert.match(result.stdout, /--obfuscate/);
 });
 
 test("version reports the installed package version", () => {
@@ -350,7 +389,7 @@ test("version reports the installed package version", () => {
   });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout.trim(), "0.2.0");
+  assert.equal(result.stdout.trim(), "0.3.0");
 });
 
 test("configured checks can wait for asynchronous behavior", async () => {
